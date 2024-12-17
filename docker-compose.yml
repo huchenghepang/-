@@ -1,7 +1,9 @@
 services:
-  nginx:
-    build: .
-    container_name: my_nginx_container  # 指定容器的名称
+  musicplayer:
+    build: 
+      context: .
+      dockerfile: dockerfile
+    container_name: mymusicplayer  # 容器名称  
     ports:
       - "3456:80"  
     volumes:

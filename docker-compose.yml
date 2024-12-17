@@ -6,6 +6,3 @@ services:
     container_name: mymusicplayer  # 容器名称  
     ports:
       - "3456:80"  
-    volumes:
-      # - ./public:/usr/share/nginx/html/public  # 挂载 public 目录 
-      # - ./nginx/default.conf:/etc/nginx/conf.d/default.conf  # 使用自定义 Nginx 配置文件

@@ -1176,6 +1176,11 @@
                 }
             },
             changeProgress: (event) => {
+                // 如果正在移动进度条则不要动
+                // if (data.isMoving) {
+                //     return
+                // }
+
                 const progress = refs.myRange.value;
                 const value = (progress - refs.myRange.min) / (refs.myRange.max - refs.myRange.min) * 100;
                 refs.myRange.style.background = `linear-gradient(to right, #4CAF50 ${value}%, #ddd ${value}%)`;
@@ -1243,6 +1248,9 @@
                 const containerHeight = refs?.lyricsContainer?.offsetHeight;
                 // 容器一半的高度 需要固定显示的位置 中间
                 const halfHeight = containerHeight / 2 - liHeight / 2;
+
+
+
                 // 当元素没有居中的时候那么就只是移动而不滚动 如果居中了则在移动歌词的同时滚动
                 const scrollTop = liHeight * index || 0;
                 const scrollHeight = refs.lyricsContainer.scrollHeight; // 完整内容的高度
@@ -1268,85 +1276,118 @@
                     // console.log("停止滚动")
                 }, 300);
             },
+            handleInputFile() {
+                return new Promise((resolve, reject) => {
+                    const inputFile = document.createElement("input");
+                    inputFile.type = "file";
+                    inputFile.accept = ".mp3,.lrc,.jpg,.jpeg,.png";
+                    inputFile.multiple = true;
+                    // 隐藏input元素
+                    inputFile.style.display = "none";
+                    document.body.appendChild(inputFile);
+                    // 点击inputfile 触发 onchange事件
+                    inputFile.click();
+                    // 监听文件读取完成事件
+                    inputFile.addEventListener("change", async (e) => {
+                        // 获取到上传的文件
+                        const files = e.target.files;
+                        for (const file of files) {
+                            methods.handleFile(file);
+                        }
+                        // 移除inputfile
+                        document.body.removeChild(inputFile);
+                        return Promise.resolve(true);
+                    })
+                    // 创建inputfile元素并添加到body末尾
+                    // 监听取消事件
+                    inputFile.addEventListener("cancel", () => {
+                        // 移除inputfile
+                        document.body.removeChild(inputFile);
+                        return Promise.resolve(false);
+                    })
+                })
+            },
             toggleShowVolume() {
                 data.isShowVolume = !data.isShowVolume;
             },
             // 打开本地添加新歌曲 使用File System Access API
             async addNewSong() {
+
                 // 判断是否支持新特性API
                 if (!("showOpenFilePicker" in self)) {
-                    alert("当前浏览器不支持该API，请切换到现代浏览器");
-                    return
-                }
-                const fileHandles = await window.showOpenFilePicker({
-                    suggestedName: "歌曲.mp3", // 建议的歌曲名称
-                    multiple: true,           // 允许多选文件
-                    types: [
-                        {
-                            description: "音频和歌词文件",
-                            accept: {
-                                "audio/mpeg": [".mp3"],  // 支持 mp3 文件
-                                "text/lrc": [".lrc"],     // 支持 lrc 歌词文件
-                                // 添加封面
-                                "image/jpeg": [".jpg", ".jpeg", ".png"], // 支持 jpg 和 png 图片
+                    const result = await methods.handleInputFile();
+                    if (!result) return
+                } else {
+                    const fileHandles = await window.showOpenFilePicker({
+                        suggestedName: "歌曲.mp3", // 建议的歌曲名称
+                        multiple: true,           // 允许多选文件
+                        types: [
+                            {
+                                description: "音频和歌词文件",
+                                accept: {
+                                    "audio/mpeg": [".mp3"],  // 支持 mp3 文件
+                                    "text/lrc": [".lrc"],     // 支持 lrc 歌词文件
+                                    // 添加封面
+                                    "image/jpeg": [".jpg", ".jpeg", ".png"], // 支持 jpg 和 png 图片
+                                }
                             }
-                        }
-                    ]
-                });
-                // 处理文件
-                for (const fileHandle of fileHandles) {
-                    const file = await fileHandle.getFile();
-                    const fileNameSplit = file.name.split(".");
-                    const fileType = fileNameSplit[fileNameSplit.length - 1];
-
-
-                    // 去掉最后的数组数据 将前面的全部拼接成字符串 形成文件名字
-                    const fileName = file.name.replace(/\.[^.]+$/, "");
-                    // 提取作者信息 示例：理想-赵雷.mp3 提取赵雷
-                    const author = fileName.split("-")[1];
-
-                    const fileInfo = {
-                        fileName,
-                        type: fileType,
-                        author
-                    }
-
-
-                    // 处理mp3文件
-                    if (fileType === "mp3") {
-
-                        // 将音频文件转换为一个音频连接使用URL
-                        const url = URL.createObjectURL(file);
-                        data.mp3List.push({ ...fileInfo, url, imageUrl: "/music/static/audio/img/默认.jpeg", index: data.mp3List.length });
-                    }
-
-                    // 处理歌词lrc文件
-                    if (fileType === "lrc") {
-
-                        // 获取歌词
-                        const reader = new FileReader();
-                        reader.readAsText(file);
-                        reader.onload = () => {
-                            const lrc = reader.result;
-                            data.lrcList.push({ ...fileInfo, lrc });
-                        }
-                        reader.onerror = () => {
-                            data.lrcList.push({ ...fileInfo, lrc: "" });
-                            // console.log(`读取${fileName}的歌词错误`)
-                        }
-                    }
-
-                    // 处理封面文件 
-                    if (fileType === "jpg" || fileType === "jpeg" || fileType === "png") {
-                        data.mp3List.forEach(s => {
-                            if (s.fileName === fileName) {
-                                const url = URL.createObjectURL(file);
-                                s.imageUrl = url;
-                            }
-                        });
+                        ]
+                    });
+                    // 处理文件
+                    for (const fileHandle of fileHandles) {
+                        const file = await fileHandle.getFile();
+                        methods.handleFile(file)
                     }
                 }
                 methods.matchSong();
+            },
+            handleFile(file) {
+                const fileNameSplit = file.name.split(".");
+                const fileType = fileNameSplit[fileNameSplit.length - 1];
+                // 去掉最后的数组数据 将前面的全部拼接成字符串 形成文件名字
+                const fileName = file.name.replace(/\.[^.]+$/, "");
+                // 提取作者信息 示例：理想-赵雷.mp3 提取赵雷
+                const author = fileName.split("-")[1];
+
+                const fileInfo = {
+                    fileName,
+                    type: fileType,
+                    author
+                }
+
+                // 处理mp3文件
+                if (fileType === "mp3") {
+
+                    // 将音频文件转换为一个音频连接使用URL
+                    const url = URL.createObjectURL(file);
+                    data.mp3List.push({ ...fileInfo, url, imageUrl: "./static/audio/img/默认.jpeg", index: data.mp3List.length });
+                }
+
+                // 处理歌词lrc文件
+                if (fileType === "lrc") {
+
+                    // 获取歌词
+                    const reader = new FileReader();
+                    reader.readAsText(file);
+                    reader.onload = () => {
+                        const lrc = reader.result;
+                        data.lrcList.push({ ...fileInfo, lrc });
+                    }
+                    reader.onerror = () => {
+                        data.lrcList.push({ ...fileInfo, lrc: "" });
+                        // console.log(`读取${fileName}的歌词错误`)
+                    }
+                }
+
+                // 处理封面文件 
+                if (fileType === "jpg" || fileType === "jpeg" || fileType === "png") {
+                    data.mp3List.forEach(s => {
+                        if (s.fileName === fileName) {
+                            const url = URL.createObjectURL(file);
+                            s.imageUrl = url;
+                        }
+                    });
+                }
             },
             // 匹配歌曲 歌词 歌曲封面
             matchSong() {
@@ -1378,8 +1419,7 @@
                 methods.changeSong(index);
             },
             changeSong(index) {
-                // 判断index是否是有效的，并且不为null、undefined且不为负数
-                if (index === undefined || index === null || index < 0) return;
+                if (!index) return;
                 const { author, songName, imageUrl, lrcText, url } = data.mp3List[index];
                 data.currentMusic.audioSrc = url;
                 data.currentMusic.musicAuthor = author;
@@ -1401,11 +1441,11 @@
                 if (mp3ListLenght <= 0) return;
 
                 // 处理边界问题
-
-                /*                 if (mp3ListLenght <= 4) {
-                                    data.fiveSongList = data.mp3List;
-                                    return;
-                                } */
+/* 
+                if (mp3ListLenght <= 4) {
+                    data.fiveSongList = data.mp3List;
+                    return;
+                } */
                 switch (index) {
                     case 0:
                         data.fiveSongList = [data.mp3List[mp3ListLenght - 1], data.mp3List[mp3ListLenght], data.mp3List[0], data.mp3List[1], data.mp3List[2]];
@@ -1455,6 +1495,7 @@
                 methods.nextSong();
             }
         })
+
 
 
         // 绑定副作用函数并初始执行

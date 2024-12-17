@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天空音乐城</title>
+    <link rel="stylesheet" href="/music/css/iconfont.css">
+    <link rel="stylesheet" href="/music/css/normal.css">
+    <script src="/music/js/utils/parselrc.js"></script>
+    <script src="/music/js/reactive.js"></script>
+    <script src="/music/js/diffPro.js"></script>
+    <script src="/music/js/render.js"></script>
+    <script src="/music/js/throttle.js"></script>
+    <script src="/music/js/debounce.js"></script>
+    <script src="/music/js/utils/showOpenFilePicker.js"></script>
+    <link rel="shortcut icon" href="/music/favicon.ico" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .hover:hover {
+            color: #eb7551 !important;
+            /* background-color: #f8f549; */
+            /* background-color:#eb7551; */
+        }
+
+        /* 默认样式 */
+        .play-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            z-index: 99;
+
+
+        }
+
+
+
+
+
+        /*播放器样式 */
+        .player {
+            position: absolute;
+            width: 800px;
+            height: 80px;
+            bottom: 40px;
+            background-color: #ca8d41;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+            border-radius: 50px;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            /* box-shadow: 1px -1px 0px #f3f1f1; */
+            filter: blur(0.2px);
+            /* z-index: 999; */
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            z-index: 9999;
+
+
+        }
+
+        .left-player {
+            width: 40px;
+            height: 20px;
+            /* background-color:red; */
+            display: flex;
+
+            .left-icon {
+                width: 0;
+                height: 0;
+                border: 10px solid #f4ebe1;
+                border-top-color: transparent;
+                border-bottom-color: transparent;
+                border-left-color: transparent;
+            }
+
+            div:last-of-type {
+                margin-left: -10px;
+            }
+
+        }
+
+
+        .right-player {
+            width: 40px;
+            height: 20px;
+            /* background-color:red; */
+            display: flex;
+
+            .right-icon {
+                width: 0;
+                height: 0;
+                border: 10px solid #f4ebe1;
+                border-top-color: transparent;
+                border-bottom-color: transparent;
+                border-right-color: transparent;
+            }
+
+            div:last-of-type {
+                margin-left: -10px;
+            }
+
+
+        }
+
+        .player-button {}
+
+        .play-on {
+            height: 24px;
+            width: 10px;
+            border-right: 7px solid #f4ebe1;
+            border-left: 7px solid #f4ebe1;
+        }
+
+        .play-pause {
+            width: 0;
+            height: 0;
+            border: 12px solid #f4ebe1;
+            border-top-color: transparent;
+            border-right-color: transparent;
+            border-bottom-color: transparent;
+        }
+
+
+        .music-info-container {
+            width: 400px;
+            height: 42px;
+            background-color: #47342e;
+            border-radius: 10px;
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+
+            .top-info {
+                display: flex;
+
+                .avator-music {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 10px;
+                    object-fit: over;
+                }
+
+                .info {
+                    width: 250px;
+                    height: 36px;
+                    color: #fff;
+                    box-sizing: border-box;
+                    margin-left: 12px;
+
+                    .music-name {
+                        font-size: 14px;
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+                    }
+
+                    .music-author {
+                        font-size: 12px;
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+
+                    }
+                }
+
+                .music-word {
+                    color: #b35e5e;
+                    width: 40px;
+                    height: 30px;
+                    font-size: 12px;
+                    border-radius: 4px;
+
+                    &:hover {
+                        background-color: #47bee2;
+                        color: #fff !important;
+                    }
+                }
+
+
+
+
+            }
+
+
+
+
+        }
+
+        .icon-container {
+            font-size: 30px;
+            color: #fff;
+            position: relative;
+
+
+            &:hover {
+                .vioce-steper-container {
+                    display: block;
+
+                }
+
+                .song-list {
+                    display: block;
+                }
+
+
+            }
+
+
+            .vioce-steper-container {
+
+                display: none;
+                position: absolute;
+                width: 30px;
+                height: 140px;
+                top: -150px;
+                left: 50%;
+                border-radius: 10px;
+                padding: 2px;
+                transform: translateX(-50%);
+                background-color: #ffffff;
+
+                .vioce-steper {
+
+                    position: absolute;
+                    left: 50%;
+                    top: 50%;
+                    /* transform-origin: center center; */
+                    transform: translate(-50%, -50%) rotateZ(180deg);
+                    text-align: left;
+                    writing-mode: vertical-lr;
+                    border: 1px solid #ccc;
+                    box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+                    /* 垂直*/
+                    -webkit-appearance: none;
+                    /* 去掉默认外观，允许自定义样式 */
+                    width: 10px;
+                    /* 滑块宽度 */
+                    height: 100px;
+                    /* 滑块高度 */
+                    background-color: #e9eaec;
+                    /* 滑块背景色 */
+                    border-radius: 10px;
+                    /* 圆角滑块 */
+                    /* 渐变展示进度条 */
+                    background: linear-gradient(to bottom, #4CAF50 40%, transparent 40%);
+
+                    &::-webkit-slider-thumb {
+                        -webkit-appearance: none;
+                        width: 10px;
+                        height: 10px;
+                        background-color: #f0c8c8dc;
+                        border-radius: 50%;
+                        cursor: pointer;
+                    }
+
+                    &::-moz-range-thumb {
+                        width: 10px;
+                        height: 10px;
+                        background-color: #a54f4f;
+                        border-radius: 20%;
+                        cursor: pointer;
+                    }
+
+                    /* 滑块轨道样式 */
+                    &::-webkit-slider-runnable-track {
+                        width: 100%;
+                        height: 100%;
+                    }
+
+
+                }
+
+                .vioce-size-info {
+                    position: absolute;
+                    bottom: 6px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    color: #d64848;
+                    font-size: 10px;
+                }
+
+                &::after {
+                    content: "";
+                    width: 0;
+                    height: 0;
+                    border: 17px solid #fafafa;
+                    border-left-color: transparent;
+                    border-right-color: transparent;
+                    border-bottom-color: transparent;
+                    position: absolute;
+                    bottom: -25px;
+                    left: 0;
+                    /* 不要影响事件 点击穿透 */
+                    /* pointer-events: none; */
+
+                }
+
+            }
+
+            /* 歌曲列表 */
+            .song-list {
+                position: absolute;
+                top: -310px;
+                left: 50%;
+                transform: translate(-50%, 0);
+                width: 260px;
+                height: 300px;
+                color: #ccc;
+                background-color: #fafafa;
+                display: none;
+                border-radius: 6px;
+
+                .song-item-container {
+                    border-radius: 6px;
+                    width: 100%;
+                    height: 100%;
+                    overflow-y: scroll;
+                    scrollbar-width: none;
+                    /* 针对 Firefox */
+                    -ms-overflow-style: none;
+                    /* 针对 IE 和旧版 Edge */
+
+                    &::-webkit-scrollbar {
+                        display: none;
+                    }
+
+                    .song-item {
+                        width: 100%;
+                        height: 55px;
+                        color: #0d1316;
+                        font-size: 14px;
+                        display: flex;
+                        width: 100%;
+                        /* 禁止点击穿透 */
+                        /* pointer-events: none; */
+
+
+                        &:hover {
+                            background-color: #edeeef;
+                        }
+
+                        img {
+                            width: 46px;
+                            height: 46px;
+                            border-radius: 10px;
+                        }
+
+                        .right-song-item {
+                            padding-left: 6px;
+                            width: calc(100% - 46px);
+
+                            .song-name {
+                                font-size: 16px;
+
+                            }
+
+                            .song-bottom {
+                                margin-top: 3px;
+                                font-size: 12px;
+                                color: #6e7483;
+                            }
+                        }
+
+                    }
+
+                }
+
+                &::before {
+                    position: absolute;
+                    content: "";
+                    width: 0;
+                    height: 0;
+                    border: 17px solid #fafafa;
+                    border-left-color: transparent;
+                    border-right-color: transparent;
+                    border-bottom-color: transparent;
+                    position: absolute;
+                    bottom: -25px;
+                    left: 50%;
+                    bottom: -30px;
+                    transform: translateX(-50%);
+
+                    /* 不要影响事件 点击穿透 */
+                    /* pointer-events: none; */
+                }
+            }
+        }
+
+
+        /* 进度条样式 */
+        #myRange {
+            margin-top: 4px;
+            -webkit-appearance: none;
+            width: 100%;
+            /* background: linear-gradient(to right, #4CAF50 0%, transparent 100%); */
+            height: 8px;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        #myRange::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 8px;
+            height: 8px;
+            background: #f1e4e0;
+            border-radius: 50%;
+            margin-top: -4px;
+            cursor: pointer;
+        }
+
+        /* 歌词容器 */
+        .lyrics-container {
+            z-index: 99;
+            transition: 0.5s cubic-bezier(0.215, 0.610, 0.355, 1);
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 40px;
+            margin: auto;
+            width: 800px;
+            height: 700px;
+            border-radius: 50px;
+            padding: 30px;
+            box-sizing: border-box;
+            background: linear-gradient(to right, #a1d4e7 40%, #5f92a5 60%, #87bfd3 80%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0px 4px 20px rgba(219, 175, 175, 0.4);
+            filter: drop-shadow(16px 16px 20px rgb(170, 86, 86)) invert(75%);
+
+            .song-header-info {
+                width: 50%;
+
+                .song-name {
+                    font-size: 22px;
+                    margin-bottom: 6px;
+                    color: #970b39 !important;
+                    cursor: pointer;
+                }
+
+                .song-author {
+
+                    font-size: 16px;
+                    margin-bottom: 10px;
+                    color: #0e82c5;
+                    border-bottom: 1px solid #970b39;
+                    cursor: pointer;
+                }
+
+
+            }
+
+            .lyrics {
+                width: 50%;
+
+                .song-lyrics-tip {
+                    background-color: #9f9c94;
+                    width: 40px;
+                    text-align: center;
+                    font-size: 14px;
+                    border-radius: 20px;
+                    padding: 3px;
+                    cursor: pointer;
+                    /* box-sizing: border-box; */
+                }
+
+                .lyrics-dynamic-container {
+
+                    height: 550px;
+                    overflow-y: scroll;
+                    border-right: 1px solid #970b39;
+                    scrollbar-width: none;
+                    /* 针对 Firefox */
+                    -ms-overflow-style: none;
+                    /* 针对 IE 和旧版 Edge */
+
+                    &::-webkit-scrollbar {
+                        display: none;
+                        /* Chrome, Safari 和新版 Edge */
+                    }
+
+                    .active-word {
+                        color: red;
+                        transform: scaleY(1.5);
+                    }
+
+                    .song-word {
+                        height: 40px;
+                        display: flex;
+                        align-items: center;
+                        cursor: pointer;
+                        justify-content: space-between;
+                        transition: 0.6s cubic-bezier(0.075, 0.82, 0.165, 1);
+
+                        &:hover {
+                            /* background-color: #f0c8c8dc; */
+                            color: red;
+                            transform: scaleY(1.5);
+
+                            /* 需要父元素悬浮时才显示 */
+                            .minutes-seconds {
+                                display: block;
+                            }
+                        }
+
+
+
+                        .minutes-seconds {
+                            font-size: 10px;
+                            margin-right: 10px;
+                            display: none;
+                        }
+
+                        /* 父元素需要有 .active-word类的时候才显示 .minutes-seconds */
+
+                        &.active-word {
+                            .minutes-seconds {
+                                display: block;
+                            }
+                        }
+
+
+
+                    }
+
+                }
+            }
+        }
+
+        /* 歌曲墙列表 */
+        .background-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+            background-image: url('/music/static/audio/img/有何不可-许嵩.jpg');
+            background-size: cover;
+
+
+            .blur-background {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                backdrop-filter: blur(50px);
+                /* 虚化效果 */
+                background: rgba(255, 255, 255, 0.1);
+                /* 半透明 */
+                z-index: 1;
+                /* 背景层级低 */
+            }
+
+            .carousel {
+                position: absolute;
+                left: 0;
+                right: 0;
+                width: 1000px;
+                margin: 0 auto;
+                z-index: 2;
+                top: 40px;
+                /* 轮播图层级高 */
+                display: flex;
+                justify-content: center;
+                perspective: 1000px;
+                overflow: hidden;
+                /* background-color: #47bee2; */
+                padding: 30px;
+
+                .card {
+                    width: 200px;
+                    height: 300px;
+                    margin: 0 -40px;
+                    background: transparent;
+                    backdrop-filter: blur(10px);
+                    border: 1px solid #fff;
+                    border-radius: 20px;
+                    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+                    transform: rotateY(0deg);
+                    transition: transform 0.5s ease;
+                    box-shadow: 2px 2px 4px rgb(170, 86, 86);
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+
+                    img {
+                        width: 190px;
+                        height: 240px;
+                        object-fit: cover;
+                        border-radius: 10px;
+                    }
+
+                    p {
+                        color: #fff;
+
+                        &:last-child {
+                            color: #81f8f8;
+                            filter: drop-shadow(16px 16px 20px #40b4e2) invert(35%);
+                        }
+                    }
+
+                }
+
+                .card:nth-child(1) {
+                    transform: rotateY(65deg);
+                    z-index: 1;
+                }
+
+                .card:nth-child(2) {
+                    z-index: 3;
+                    transform: rotateY(45deg);
+
+                }
+
+                .card:nth-child(3) {
+                    z-index: 5;
+                }
+
+                .card:nth-child(4) {
+                    z-index: 4;
+                    transform: rotateY(-45deg);
+                }
+
+                .card:nth-child(5) {
+                    z-index: 3;
+                    transform: rotateY(-65deg);
+                }
+
+                .card:hover {
+                    transform: rotateY(0deg);
+                    transform: translateY(2px);
+                    transform: translateZ(20px);
+                    z-index: 20;
+                    cursor: pointer;
+                }
+            }
+
+
+        }
+
+
+        /* 移动端样式 */
+        @media screen and (max-width: 768px) {
+
+            * {
+                box-sizing: border-box !important;
+            }
+
+            body {
+                width: 100vw;
+                height: 100vh;
+            }
+
+            .container {
+                width: 100vw;
+                height: 100vh;
+                /* overflow-x: hidden; */
+            }
+
+            .player {
+                width: 100%;
+                height: 70px;
+
+                z-index: 99999;
+            }
+
+            .left-player,
+            .right-player {
+                width: 10px;
+                font-size: 8px !important;
+            }
+
+            .player-button,
+            .play-pause,
+            .play-on {
+                transform: translate(40%, -20%);
+                border-width: 6px !important;
+            }
+
+            .play-on {
+                height: 15px !important;
+                width: 8px !important;
+                border-width: 2px !important;
+            }
+
+
+            .left-icon,
+            .right-icon {
+                border-width: 7px !important;
+            }
+
+            .music-info-container {
+                width: 40vw;
+                font-size: 8px;
+            }
+
+            .top-info {
+                width: 100%;
+
+
+            }
+
+            .avator-music {
+                width: 20px !important;
+                height: 20px !important;
+                border-radius: 5px !important;
+            }
+
+            .info {
+                font-size: 8px;
+            }
+
+            .music-word {
+                width: 45px !important;
+                height: 90% !important;
+                padding: 2px !important;
+                font-size: 15px !important;
+                font-size: 12px !important;
+            }
+
+
+            .icon-container {
+                font-size: 10px !important;
+            }
+
+
+            .lyrics-container {
+                width: 100vw !important;
+            }
+
+            .carousel {
+                width: 100vw !important;
+                position: fixed;
+                margin: 0 !important;
+                top: 0 !important;
+            }
+
+            .card {
+                box-sizing: border-box !important;
+            }
+
+            .img {
+                width: 50px !important;
+                height: 60px !important;
+            }
+
+            .song-item-container {
+                width: 50vw !important;
+                z-index: 99999;
+                right: 0;
+                top: 0;
+
+            }
+
+            .song-list {
+                right: 0;
+                top: 0;
+                transform: translateX(-50%) !important;
+            }
+
+            .lyrics-container {
+                top: 0 !important;
+                padding: 5px !important;
+            }
+
+            .lyrics {
+                width: 100% !important;
+            }
+
+            .lyrics-dynamic-container {
+                width: 95% !important;
+                height: 70vh !important;
+
+            }
+        }
+
+
+
+
+        :root {
+            overflow: hidden;
+        }
+    </style>
+    <link rel="stylesheet" href="/music/css/volume-slide.css">
+</head>
+
+<body>
+    <div id="container" class="container"></div>
+    <template id="my-template">
+        <!-- 音乐播放器容器 -->
+        <div class="play-container">
+            <!-- 播放器 -->
+
+            <div class="player">
+                <!-- 上一首播放 -->
+                <div class="left-player" @click="prevSong">
+                    <div class="left-icon"></div>
+                    <div class="left-icon"></div>
+                </div>
+
+                <!-- 切换暂停或者激活播放 -->
+                <div class="player-button play-pause" ref="playPause" @click="pasuePlay">
+
+                </div>
+                <!-- 右播放 -->
+                <div class="right-player hover" @click="nextSong">
+                    <div class="right-icon"></div>
+                    <div class="right-icon"></div>
+                </div>
+                <!-- 播放信息 -->
+                <div class="music-info-container">
+                    <div class="top-info">
+                        <!-- 歌曲封面缩略图 -->
+                        <img class="avator-music" :src="currentMusic.musicPic" :alt="currentMusic.musicAuthor">
+                        <div class="info">
+                            <p class="music-name hover text-over-hidden">{{currentMusic.musicName}}</p>
+                            <p class="music-author hover text-over-hidden">{{currentMusic.musicAuthor}}</p>
+                        </div>
+                        <button class="music-word hover" @click="toggleShowVolume">歌词</button>
+                        <button class="music-word hover" @click="addNewSong">添加</button>
+                    </div>
+
+                    <!-- 底部进度条 -->
+                    <input ref="myRange" :value="currentMusic.currentProgress" class="progress-music" type="range"
+                        name="" min="0" :max="currentMusic.duration" step="1" @dragstart="dragStart"
+                        @input="changeProgress" @pointerdown="pointerDown" @pointerup="pointerUp">
+                    <span ref="currentTime"></span>
+                </div>
+                <!-- 评论  -->
+                <div class="icon-container comment iconfont icon-comment"></div>
+                <!-- 切换播放列表 -->
+                <div class="icon-container vioce iconfont icon-list" @pointerdown.self="matchSong">
+                    <!-- 歌曲列表 -->
+                    <div class="song-list" v-if="isShowSongList">
+                        <div class="song-item-container">
+                            <div class="song-item" v-for="(item,index) in mp3List" @click="clickChangeSong"
+                                v-key="index" :data-index="index">
+                                <img :src="item.imageUrl" :data-index="index" alt="">
+                                <div class="right-song-item" :data-index="index">
+                                    <p :data-index="index" class="song-name"><span>{{item.fileName}}</span></p>
+                                    <p :data-index="index" class="song-bottom"><span>{{item.author}}</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 声音播放器 -->
+                <div class="icon-container list iconfont icon-vioce" ref="volumeControl">
+                    <!-- 调节音量的大小 -->
+                    <div class="vioce-steper-container">
+                        <input type="range" ref="vioceSteper" :value="currentMusic.volume" min="0" max="100" step="1"
+                            class="vioce-steper" @input="changeVolume">
+                        <span class="vioce-size-info">{{currentMusic.volume}}%</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- 歌词显示 -->
+            <div class="lyrics-container" v-show="isShowVolume">
+                <!-- 歌曲头部信息 -->
+                <div class="song-header-info">
+                    <!-- 歌名 -->
+                    <div class="song-name">{{currentMusic.musicName}}</div>
+                    <div class="song-author">歌手：{{currentMusic.musicAuthor}}</div>
+
+                </div>
+                <div class="lyrics" ref="lyrics">
+                    <div class="song-lyrics-tip">歌词</div>
+                    <!-- 动态插入歌词 -->
+                    <div class="lyrics-dynamic-container" ref="lyricsContainer" @scroll="slideWordingChange">
+                        <!-- 歌词 -->
+                        <li class="song-word" v-for="(item,index) in musicWords" v-key="index" :data-index="index">
+                            <span :data-index="index" @click="getIndexSongWord">{{item.lyric}}</span>
+                            <span class="minutes-seconds">{{item.minutesSeconds}}</span>
+                        </li>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 背景虚化 -->
+            <div class="background-container" ref="backContainer">
+                <div class="blur-background"></div> <!-- 背景虚化层 -->
+                <div class="carousel"> <!-- 轮播区域 -->
+                    <div class="card" v-for=" (item,index) in fiveSongList ">
+                        <img :src="item.imageUrl" alt="" srcset="" @click="clickFiveSong" :data-index="item.index">
+                        <p>{{item.songName}}</p>
+                        <p>{{item.author}}</p>
+                    </div>
+                </div>
+            </div>
+            <audio style="display: none;" ref="audioPlayer" :value="currentMusic.currentProgress" controls
+                class="audio-player" @timeupdate="updatePlayProgress" @loadedmetadata="loadedmetadataMusic"
+                @ended="endPlay">
+                <source :src="currentMusic.audioSrc" type="audio/mpeg">
+                您的浏览器器不支持，请升级浏览器！！！
+            </audio>
+        </div>
+
+
+
+    </template>
+    <div class="blur-effect"></div>
+
+
+    <script>
+
+        // 数据
+        const data = reactive({
+            currentMusic: {
+                duration: 0,
+                musicName: "天空之城",
+                musicAuthor: "久石让",
+                musicWord: "",
+                musicPic: "/music/static/audio/img/天空之城.png",
+                audioSrc: "/music/static/audio/天空之城.mp3",
+                // 当前播放的进度秒速
+                currentProgress: 0,
+                // 音量
+                volume: 40,
+                currentWordIndex: 0,// 当前播放的歌词位置
+                currentMusicIndex: 0,//
+            },
+            songsList: [],
+            isShowVolume: false,// 是否显示歌词
+            isMoving: false,
+            isShowControlVolume: false,
+            musicWords: [
+
+            ],
+            item: {},
+            isPlaying: false,
+            isSlideWording: false,// 是否正在滑动歌词
+            isShowSongList: false,// 是否显示歌曲列表
+            mp3List: [
+                {
+                    author: "Bob Dylan",
+                    fileName: "Blowing in the Wind-Bob Dylan",
+                    imageUrl: "/music/static/audio/img/Blowing in the Wind-Bob Dylan.jpg",
+                    lrcText: "",
+                    songName: "Blowing in the Wind-Bob Dylan",
+                    type: "mp3",
+                    url: "/music/static/audio/Blowing in the Wind-Bob Dylan.mp3",
+                    index: 0
+                },
+                {
+                    author: "Jam",
+                    fileName: "城-Jam",
+                    imageUrl: "/music/static/audio/img/七月上-Jam.jpg",
+                    lrcText: "",
+                    songName: "城-Jam",
+                    type: "mp3",
+                    url: "/music/static/audio/城-Jam.mp3",
+                    index: 1
+                },
+                {
+                    author: "赵雷",
+                    fileName: "程艾影-赵雷",
+                    imageUrl: "/music/static/audio/img/程艾影-赵雷.jpg",
+                    lrcText: "",
+                    songName: "程艾影-赵雷",
+                    type: "mp3",
+                    url: "/music/static/audio/程艾影-赵雷.mp3",
+                    index: 2
+                },
+                {
+                    author: "李志",
+                    fileName: "天空之城-李志",
+                    imageUrl: "/music/static/audio/img/天空之城（李逼）-热心市民孟先生.png",
+                    lrcText: "",
+                    songName: "天空之城-李志",
+                    type: "mp3",
+                    url: "/music/static/audio/天空之城（李逼）-热心市民孟先生.mp3",
+                    index: 3
+                },
+                {
+                    author: "久石让",
+                    fileName: "天空之城",
+                    imageUrl: "/music/static/audio/img/默认.jpeg",
+                    lrcText: "",
+                    songName: "天空之城",
+                    type: "mp3",
+                    url: "/music/static/audio/天空之城.mp3",
+                    index: 4
+                }
+            ],
+            lrcList: [
+                {
+                    "fileName": "Blowing in the Wind-Bob Dylan",
+                    "type": "lrc",
+                    "author": "Bob Dylan",
+                    "lrc": "[00:00.00] 作词 : Bob Dylan\n[00:01.00] 作曲 : Bob Dylan\n[00:06.62]How many roads must a man walk down\n[00:12.14]Before you call him a man\n[00:17.92]How many seas must a white dove sail\n[00:23.47]Before she sleeps in the sand\n[00:29.47]How many times must the cannon balls fly\n[00:35.12]Before they're forever banned\n[00:40.95]The answer, my friend, is blowing in the wind\n[00:46.68]The answer is blowing in the wind\n[00:52.62]How many years can a mountain exist\n[00:58.09]Before it is washed to the sea\n[01:04.04]How many years can some people exist\n[01:09.45]Before they're allowed to be free\n[01:15.38]How many times can a man turn his head\n[01:20.88]And pretend that he just doesn't see\n[01:26.83]The answer, my friend, is blowing in the wind\n[01:32.41]The answer is blowing in the wind\n[01:38.21]How many times must a man look up\n[01:43.73]Before he really see the sky\n[01:49.46]How many ears must one person have\n[01:54.92]Before he can hear people cry\n[02:00.85]How many deaths will it take\n[02:06.24]Till he knows that too many people have died\n[02:12.15]The answer, my friend, is blowing in the wind\n[02:17.53]The answer is blowing in the wind\n[02:23.20]The answer, my friend, is blowing in the wind\n[02:29.06]The answer is blowing in the wind\n[02:35.86]\n"
+                },
+                {
+                    "fileName": "城-Jam",
+                    "type": "lrc",
+                    "author": "Jam",
+                    "lrc": "[00:04.78]\n[00:14.08]关在一个人的世界里，还在等吗\n[00:22.26]你在两个人的梦境里，不会说话\n[00:30.27]还走在下过雨的城市里，痛苦挣扎\n[00:38.61]已不在凌晨的手机里，忘了时差\n[00:52.41]\n[00:57.52]最终要是还不回家，我会给你一个回答\n[01:06.92]藏不住还想听的话，只害怕你也做了假\n[01:14.10]全怪这世界太浮夸，把我们全都比作沙\n[01:23.28]唯一放不下的牵挂，是你孤身一人下\n[01:30.58]\n[01:30.78]一切都只是个偏差，为何你还在为他傻\n[01:39.85]嘴上说的一丝不挂，心里早已种下了花\n[01:47.62]万一你还是会害怕，我会为你撑住天下\n[01:56.61]在你梦境为你厮杀，在你城市里留下\n[02:07.85]\n[02:16.61]关在一个人的世界里，还在等吗\n[02:25.10]你在两个人的梦境里，不会说话\n[02:33.40]还走在下过雨的城市里，痛苦挣扎\n[02:41.94]已不在凌晨的手机里，忘了时差\n[02:49.81]\n[03:00.83]最终要是还不回家，我会给你一个回答\n[03:10.27]藏不住还想听的话，只害怕你也做了假\n[03:17.90]全怪这世界太浮夸，把我们全都比作沙\n[03:26.99]唯一放不下的牵挂，是你孤身一人下的城啊\n[03:39.14]\n"
+                },
+                {
+                    "fileName": "程艾影-赵雷",
+                    "type": "lrc",
+                    "author": "赵雷",
+                    "lrc": "[00:41.83]伍岚正和程艾影从上海到武汉\r\n[00:49.60]他们要坐十天马车三天两夜的轮船\r\n[01:00.78]泥路上艾影含着糖靠着岚正的肩膀\r\n[01:08.52]马车经过村庄 石路颠簸不渝的情肠\r\n[01:16.41]\r\n[01:16.67]一路望 跌跌撞 午夜流星何去何往\r\n[01:25.06]路海长 青夜旷 越过群山追斜阳\r\n[01:33.53]\r\n[01:51.43]拨开面纱回望故乡 只见潮湿的月亮\r\n[01:59.17]雨水冲不掉常德路上爬满蛛网的门窗\r\n[02:08.03]梦里回到他的身旁 蜜语中风不再凉\r\n[02:15.81]永远都像初次见你那样 使我心荡漾\r\n[02:23.60]\r\n[02:23.70]没有奇迹 没有惊喜 尘埃里花不会哭泣\r\n[02:32.33]没有质疑 没有道理 褶皱的信乘飞雨\r\n[02:41.61]\r\n[02:58.07]一路望 跌跌撞 午夜流星何去何往\r\n[03:06.07]路海长 青夜旷 越过群山追斜阳\r\n[03:14.36]\r\n[03:14.58]没有奇迹 没有惊喜 尘埃里花不会哭泣\r\n[03:22.70]没有质疑 没有道理 褶皱的信乘飞雨\r\n[03:31.72]\r\n[04:12.20]漫山遍野你的脸庞 唯有遗忘是最漫长\r\n[04:20.13]这是一条必经的路 没有指引出口的光\r\n[04:31.17]\r\n[04:50.27]"
+                },
+                {
+                    "fileName": "七月上-Jam",
+                    "type": "lrc",
+                    "author": "Jam",
+                    "lrc": "[00:00.00] 作词 : Jam\n[00:01.00] 作曲 : Jam\n[00:12.88]我化尘埃飞扬，追寻赤裸逆翔\n[00:21.25]奔去七月刑场，时间烧灼滚烫\n[00:29.21]回忆撕毁臆想，路上行走匆忙\n[00:37.46]难能可贵世上，散播留香磁场\n[00:49.42]我欲乘风破浪，踏遍黄沙海洋\n[00:53.45]与其误会一场，也要不负勇往\n[00:57.60]我愿你是个谎，从未出现南墙\n[01:01.89]笑是神的伪装，笑是强忍的伤\n[01:06.35]就让我走向你，走向你的窗\n[01:10.54]就让我看见你，看见你的伤\n[01:15.05]我想你就站在，站在大漠边疆\n[01:19.64]我想你就站在，站在七月上\n[01:30.54]\n[01:38.22]我化尘埃飞扬，追寻赤裸逆翔\n[01:46.28]奔去七月刑场，时间烧灼滚烫\n[01:54.39]回忆撕毁臆想，路上行走匆忙\n[02:02.69]难能可贵世上，散播留香磁场\n[02:10.05]\n[02:14.64]我欲乘风破浪，踏遍黄沙海洋\n[02:18.85]与其误会一场，也要不负勇往\n[02:22.96]我愿你是个谎，从未出现南墙\n[02:27.92]笑是神的伪装，笑是强忍的伤\n[02:32.27]就让我走向你，走向你的窗\n[02:36.62]就让我看见你，看见你的伤\n[02:40.92]我想你就站在，站在大漠边疆\n[02:45.38]我想你就站在，站在七月上\n"
+                },
+            ],
+            imageList: [],
+            fiveSongList: [
+                {
+                    "author": "Bob Dylan",
+                    "fileName": "Blowing in the Wind-Bob Dylan",
+                    "imageUrl": "/music/static/audio/img/Blowing in the Wind-Bob Dylan.jpg",
+                    "lrcText": "[00:00.00] 作词 : Bob Dylan\n[00:01.00] 作曲 : Bob Dylan\n[00:06.62]How many roads must a man walk down\n[00:12.14]Before you call him a man\n[00:17.92]How many seas must a white dove sail\n[00:23.47]Before she sleeps in the sand\n[00:29.47]How many times must the cannon balls fly\n[00:35.12]Before they're forever banned\n[00:40.95]The answer, my friend, is blowing in the wind\n[00:46.68]The answer is blowing in the wind\n[00:52.62]How many years can a mountain exist\n[00:58.09]Before it is washed to the sea\n[01:04.04]How many years can some people exist\n[01:09.45]Before they're allowed to be free\n[01:15.38]How many times can a man turn his head\n[01:20.88]And pretend that he just doesn't see\n[01:26.83]The answer, my friend, is blowing in the wind\n[01:32.41]The answer is blowing in the wind\n[01:38.21]How many times must a man look up\n[01:43.73]Before he really see the sky\n[01:49.46]How many ears must one person have\n[01:54.92]Before he can hear people cry\n[02:00.85]How many deaths will it take\n[02:06.24]Till he knows that too many people have died\n[02:12.15]The answer, my friend, is blowing in the wind\n[02:17.53]The answer is blowing in the wind\n[02:23.20]The answer, my friend, is blowing in the wind\n[02:29.06]The answer is blowing in the wind\n[02:35.86]\n",
+                    "songName": "Blowing in the Wind-Bob Dylan",
+                    "type": "mp3",
+                    "url": "/music/static/audio/Blowing in the Wind-Bob Dylan.mp3",
+                    "index": 0
+                },
+                {
+                    "author": "Jam",
+                    "fileName": "城-Jam",
+                    "imageUrl": "/music/static/audio/img/七月上-Jam.jpg",
+                    "lrcText": "[00:04.78]\n[00:14.08]关在一个人的世界里，还在等吗\n[00:22.26]你在两个人的梦境里，不会说话\n[00:30.27]还走在下过雨的城市里，痛苦挣扎\n[00:38.61]已不在凌晨的手机里，忘了时差\n[00:52.41]\n[00:57.52]最终要是还不回家，我会给你一个回答\n[01:06.92]藏不住还想听的话，只害怕你也做了假\n[01:14.10]全怪这世界太浮夸，把我们全都比作沙\n[01:23.28]唯一放不下的牵挂，是你孤身一人下\n[01:30.58]\n[01:30.78]一切都只是个偏差，为何你还在为他傻\n[01:39.85]嘴上说的一丝不挂，心里早已种下了花\n[01:47.62]万一你还是会害怕，我会为你撑住天下\n[01:56.61]在你梦境为你厮杀，在你城市里留下\n[02:07.85]\n[02:16.61]关在一个人的世界里，还在等吗\n[02:25.10]你在两个人的梦境里，不会说话\n[02:33.40]还走在下过雨的城市里，痛苦挣扎\n[02:41.94]已不在凌晨的手机里，忘了时差\n[02:49.81]\n[03:00.83]最终要是还不回家，我会给你一个回答\n[03:10.27]藏不住还想听的话，只害怕你也做了假\n[03:17.90]全怪这世界太浮夸，把我们全都比作沙\n[03:26.99]唯一放不下的牵挂，是你孤身一人下的城啊\n[03:39.14]\n",
+                    "songName": "城-Jam",
+                    "type": "mp3",
+                    "url": "/music/static/audio/城-Jam.mp3",
+                    "index": 1
+                },
+                {
+                    "author": "赵雷",
+                    "fileName": "程艾影-赵雷",
+                    "imageUrl": "/music/static/audio/img/程艾影-赵雷.jpg",
+                    "lrcText": "[00:41.83]伍岚正和程艾影从上海到武汉\r\n[00:49.60]他们要坐十天马车三天两夜的轮船\r\n[01:00.78]泥路上艾影含着糖靠着岚正的肩膀\r\n[01:08.52]马车经过村庄 石路颠簸不渝的情肠\r\n[01:16.41]\r\n[01:16.67]一路望 跌跌撞 午夜流星何去何往\r\n[01:25.06]路海长 青夜旷 越过群山追斜阳\r\n[01:33.53]\r\n[01:51.43]拨开面纱回望故乡 只见潮湿的月亮\r\n[01:59.17]雨水冲不掉常德路上爬满蛛网的门窗\r\n[02:08.03]梦里回到他的身旁 蜜语中风不再凉\r\n[02:15.81]永远都像初次见你那样 使我心荡漾\r\n[02:23.60]\r\n[02:23.70]没有奇迹 没有惊喜 尘埃里花不会哭泣\r\n[02:32.33]没有质疑 没有道理 褶皱的信乘飞雨\r\n[02:41.61]\r\n[02:58.07]一路望 跌跌撞 午夜流星何去何往\r\n[03:06.07]路海长 青夜旷 越过群山追斜阳\r\n[03:14.36]\r\n[03:14.58]没有奇迹 没有惊喜 尘埃里花不会哭泣\r\n[03:22.70]没有质疑 没有道理 褶皱的信乘飞雨\r\n[03:31.72]\r\n[04:12.20]漫山遍野你的脸庞 唯有遗忘是最漫长\r\n[04:20.13]这是一条必经的路 没有指引出口的光\r\n[04:31.17]\r\n[04:50.27]",
+                    "songName": "程艾影-赵雷",
+                    "type": "mp3",
+                    "url": "/music/static/audio/程艾影-赵雷.mp3",
+                    "index": 2
+                },
+                {
+                    "author": "李志",
+                    "fileName": "天空之城-李志",
+                    "imageUrl": "/music/static/audio/img/天空之城（李逼）-热心市民孟先生.png",
+                    "lrcText": "",
+                    "songName": "天空之城-李志",
+                    "type": "mp3",
+                    "url": "/music/static/audio/天空之城（李逼）-热心市民孟先生.mp3",
+                    "index": 3
+                },
+                {
+                    "author": "久石让",
+                    "fileName": "天空之城",
+                    "imageUrl": "/music/static/audio/img/默认.jpeg",
+                    "lrcText": "",
+                    "songName": "天空之城",
+                    "type": "mp3",
+                    "url": "/music/static/audio/天空之城.mp3",
+                    "index": 4
+                }
+            ],
+
+        });
+
+        const refs = {
+
+        }
+
+
+        // 方法
+        const methods = reactive({
+
+            updatePlayProgress: throttle((event) => {
+
+                data.currentMusic.currentProgress = Math.floor(event.target.currentTime);
+                // 如果正在移动控制条就不要同步控制条 否则同步
+                if (data.isMoving) {
+                    return;
+                }
+                refs.myRange.value = data.currentMusic.currentProgress;
+                methods.changeProgress();
+                if (data.isPlaying) {
+                    methods.matchWord(event.target.currentTime);
+                }
+            }, 1000),
+            // 音频时长的变化
+            loadedmetadataMusic: () => {
+
+                const duration = refs.audioPlayer.duration;
+
+                const minutes = Math.floor(duration / 60);
+
+                const seconds = Math.floor(duration % 60);
+                // 如果秒数小于10则补零
+                const secondsStr = seconds < 10 ? `0${seconds}` : seconds;
+                data.currentMusic.duration = minutes * 60 + seconds;
+
+
+                // 解析歌词
+                data.musicWords = parseLrcPro(data.currentMusic.musicWord);
+
+                // 显示时长
+                // refs.currentTime.textContent = `${minutes}:${secondsStr}`;
+            },
+            // 监听用户正在移动range进度条
+            pointerDown: (e) => {
+                data.isMoving = true;
+                // audio.pause(); // 可选：拖动时暂停音频
+                // console.log('开始拖动控制条');
+            },
+            pointerMove: (e) => {
+
+            },
+            pointerUp: debounce(function (event) {
+
+                // 是否正在播放,在播放则暂停播放
+                methods.pasuePlay();
+
+
+                data.isMoving = false;
+                // console.log("结束拖动");
+                // 暂停播放
+                const progress = Math.floor(event.target.value);
+                refs.audioPlayer.currentTime = progress;
+
+                methods.pasuePlay();
+            }, 200),
+            dragStart: (e) => {
+                e.preventDefault();
+            },
+            // 点击播放
+            playMusic: () => {
+                refs.audioPlayer.play();
+                data.isPlaying = true;
+                // 添加播放类 移除暂停类
+                refs.playPause.classList.remove('play-pause');
+                refs.playPause.classList.add('play-on');
+            },
+            // 点击暂停
+            pasueMusic: () => {
+                refs.audioPlayer.pause();
+                data.isPlaying = false;
+                // 添加暂停类
+                refs.playPause.classList.add('play-pause');
+                refs.playPause.classList.remove('play-on');
+            },
+            pasuePlay() {
+                if (data.isPlaying) {
+                    refs.audioPlayer.pause();
+                    data.isPlaying = false;
+                    // 添加暂停类
+                    refs.playPause.classList.add('play-pause');
+                    refs.playPause.classList.remove('play-on');
+                } else {
+                    refs.audioPlayer.play();
+                    data.isPlaying = true;
+                    // 添加播放类 移除暂停类
+                    refs.playPause.classList.remove('play-pause');
+                    refs.playPause.classList.add('play-on');
+                }
+            },
+            changeProgress: (event) => {
+                const progress = refs.myRange.value;
+                const value = (progress - refs.myRange.min) / (refs.myRange.max - refs.myRange.min) * 100;
+                refs.myRange.style.background = `linear-gradient(to right, #4CAF50 ${value}%, #ddd ${value}%)`;
+            },
+            // 调节音量大小
+            changeVolume: (event) => {
+                const volume = refs.vioceSteper.value;
+                refs.audioPlayer.volume = volume / 100;
+                data.currentMusic.volume = volume;
+                // 改变进度条走过的颜色
+                refs.vioceSteper.style.background = `linear-gradient(to bottom, #4CAF50 ${volume}%, #ddd ${volume}%)`;
+            },
+            // 获取当前歌词的位置
+            getIndexSongWord(event) {
+                const index = +event.target.dataset["index"];
+                data.currentMusic.currentWordIndex = index;
+                methods.changePlayPoint(index);
+                const speed = data.musicWords[index].seconds;
+                methods.jumpToPosition(speed);
+                // methods.pasuePlay();
+                methods.playMusic()
+            },
+
+            // 根据index位置获取当前需要切换的播放点
+            changePlayPoint(index) {
+                if (data.musicWords.length <= 0) return;
+                // 获取当前歌词的秒速
+                const speed = data.musicWords[index].seconds;
+                // 添加激活的类
+                // debugger;
+                Array.from(refs.lyricsContainer.children).forEach((element, elemIndex) => {
+                    // 去掉所有激活的类
+                    element.classList.remove("active-word");
+                });
+
+                // 给当前需要切换的类添加激活的类
+                refs.lyricsContainer.children[index].classList.add("active-word");
+                methods.changeTranslate(index)
+                // methods.jumpToPosition(speed);
+            },
+            // 跳转到指定位置
+            jumpToPosition(position) {
+                refs.audioPlayer.currentTime = position;
+            },
+            // 根据当前播放器的位置 匹配歌词列表的位置
+            matchWord(currentTime) {
+                let index = 0;
+                data.musicWords.forEach((word, i) => {
+                    if (index >= data.musicWords.length) {
+                        return
+                    }
+                    if (currentTime > word.seconds) {
+                        index = i;
+                    }
+                });
+                // 如果找到了就匹配
+                methods.changePlayPoint(index);
+            },
+            // 根据当前移动的index，改变现实的位置 使用translate改变
+            changeTranslate(index) {
+                // 获取一句歌词容器的高度
+                const liHeight = refs?.lyricsContainer?.children[0]?.offsetHeight;
+
+                // const liHeight = data.songWordContainerChildHeight;
+                const containerHeight = refs?.lyricsContainer?.offsetHeight;
+                // 容器一半的高度 需要固定显示的位置 中间
+                const halfHeight = containerHeight / 2 - liHeight / 2;
+                // 当元素没有居中的时候那么就只是移动而不滚动 如果居中了则在移动歌词的同时滚动
+                const scrollTop = liHeight * index || 0;
+                const scrollHeight = refs.lyricsContainer.scrollHeight; // 完整内容的高度
+                const clientHeight = refs.lyricsContainer.clientHeight;
+                const offset = scrollTop + clientHeight - scrollHeight;
+
+
+                if (scrollTop < halfHeight || data.isSlideWording) return;
+
+                refs.lyricsContainer.scrollTop = scrollTop - halfHeight;
+            },
+            // 监听事件滚动打开时和结束
+            slideWordingChange: (event) => {
+                if (!data.isSlideWording) {
+                    data.isSlideWording = true;
+                    // console.log("开始滚动")
+                }
+
+                // console.log("滚动中")
+                clearTimeout(data.isSlideWording);
+                data.isSlideWording = setTimeout(() => {
+                    data.isSlideWording = false;
+                    // console.log("停止滚动")
+                }, 300);
+            },
+            toggleShowVolume() {
+                data.isShowVolume = !data.isShowVolume;
+            },
+            // 打开本地添加新歌曲 使用File System Access API
+            async addNewSong() {
+                // 判断是否支持新特性API
+                if (!("showOpenFilePicker" in self)) {
+                    alert("当前浏览器不支持该API，请切换到现代浏览器");
+                    return
+                }
+                const fileHandles = await window.showOpenFilePicker({
+                    suggestedName: "歌曲.mp3", // 建议的歌曲名称
+                    multiple: true,           // 允许多选文件
+                    types: [
+                        {
+                            description: "音频和歌词文件",
+                            accept: {
+                                "audio/mpeg": [".mp3"],  // 支持 mp3 文件
+                                "text/lrc": [".lrc"],     // 支持 lrc 歌词文件
+                                // 添加封面
+                                "image/jpeg": [".jpg", ".jpeg", ".png"], // 支持 jpg 和 png 图片
+                            }
+                        }
+                    ]
+                });
+                // 处理文件
+                for (const fileHandle of fileHandles) {
+                    const file = await fileHandle.getFile();
+                    const fileNameSplit = file.name.split(".");
+                    const fileType = fileNameSplit[fileNameSplit.length - 1];
+
+
+                    // 去掉最后的数组数据 将前面的全部拼接成字符串 形成文件名字
+                    const fileName = file.name.replace(/\.[^.]+$/, "");
+                    // 提取作者信息 示例：理想-赵雷.mp3 提取赵雷
+                    const author = fileName.split("-")[1];
+
+                    const fileInfo = {
+                        fileName,
+                        type: fileType,
+                        author
+                    }
+
+
+                    // 处理mp3文件
+                    if (fileType === "mp3") {
+
+                        // 将音频文件转换为一个音频连接使用URL
+                        const url = URL.createObjectURL(file);
+                        data.mp3List.push({ ...fileInfo, url, imageUrl: "/music/static/audio/img/默认.jpeg", index: data.mp3List.length });
+                    }
+
+                    // 处理歌词lrc文件
+                    if (fileType === "lrc") {
+
+                        // 获取歌词
+                        const reader = new FileReader();
+                        reader.readAsText(file);
+                        reader.onload = () => {
+                            const lrc = reader.result;
+                            data.lrcList.push({ ...fileInfo, lrc });
+                        }
+                        reader.onerror = () => {
+                            data.lrcList.push({ ...fileInfo, lrc: "" });
+                            // console.log(`读取${fileName}的歌词错误`)
+                        }
+                    }
+
+                    // 处理封面文件 
+                    if (fileType === "jpg" || fileType === "jpeg" || fileType === "png") {
+                        data.mp3List.forEach(s => {
+                            if (s.fileName === fileName) {
+                                const url = URL.createObjectURL(file);
+                                s.imageUrl = url;
+                            }
+                        });
+                    }
+                }
+                methods.matchSong();
+            },
+            // 匹配歌曲 歌词 歌曲封面
+            matchSong() {
+                // 找到歌曲
+                const song = data.mp3List.map((item, index) => {
+                    const fileName = item.fileName;
+                    if (fileName) {
+                        item.songName = fileName;
+                        item.lrcText = methods.matchLrc(fileName);
+                        // debugger;
+                        return item;
+                    }
+                    return item
+
+                });
+                data.isShowSongList = !data.isShowSongList;
+            },
+            // 匹配歌词
+            matchLrc(fileName) {
+                const lrc = data.lrcList.find(item => item.fileName === fileName);
+                if (lrc) {
+                    return lrc.lrc;
+                }
+                return ""
+            },
+            // 切换歌曲
+            clickChangeSong(event) {
+                const index = +event.target.dataset["index"];
+                methods.changeSong(index);
+            },
+            changeSong(index) {
+                // 判断index是否是有效的，并且不为null、undefined且不为负数
+                if (index === undefined || index === null || index < 0) return;
+                const { author, songName, imageUrl, lrcText, url } = data.mp3List[index];
+                data.currentMusic.audioSrc = url;
+                data.currentMusic.musicAuthor = author;
+                data.currentMusic.musicName = songName;
+                data.currentMusic.musicPic = imageUrl;
+                data.currentMusic.musicWord = lrcText;
+                refs.audioPlayer.src = url;
+                methods.playMusic();
+                methods.changeFiveSongList(index);
+                data.currentMusic.currentMusicIndex = index;
+                // 改变背景图片
+                refs.backContainer.style = `background-image: url(${imageUrl});`
+            },
+            changeFiveSongList(index) {
+                if (index < 0) return;
+
+                const mp3ListLenght = data.mp3List.length - 1
+
+                if (mp3ListLenght <= 0) return;
+
+                // 处理边界问题
+
+                /*                 if (mp3ListLenght <= 4) {
+                                    data.fiveSongList = data.mp3List;
+                                    return;
+                                } */
+                switch (index) {
+                    case 0:
+                        data.fiveSongList = [data.mp3List[mp3ListLenght - 1], data.mp3List[mp3ListLenght], data.mp3List[0], data.mp3List[1], data.mp3List[2]];
+                        break;
+                    case 1:
+                        data.fiveSongList = [data.mp3List[mp3ListLenght], data.mp3List[0], data.mp3List[1], data.mp3List[2], data.mp3List[3]];
+                        break;
+                    case mp3ListLenght - 1:
+                        data.fiveSongList = [data.mp3List[index - 2], data.mp3List[index - 1], data.mp3List[index], data.mp3List[index + 1], data.mp3List[0]];
+                        break;
+                    case mp3ListLenght:
+                        data.fiveSongList = [data.mp3List[index - 2], data.mp3List[index - 1], data.mp3List[index], data.mp3List[0], data.mp3List[1]];
+                        break;
+                    default:
+                        data.fiveSongList = [data.mp3List[index - 2], data.mp3List[index - 1], data.mp3List[index], data.mp3List[index + 1], data.mp3List[index + 2]];
+                        break;
+                }
+            },
+            clickFiveSong(event) {
+                const index = +event.target.dataset["index"];
+                methods.changeSong(index);
+            },
+            // 下一首
+            nextSong() {
+                if (data.mp3List.length <= 0) return false
+                const currentIndex = data.currentMusic.currentMusicIndex;
+                const mp3ListLenght = data.mp3List.length - 1;
+                if (currentIndex === mp3ListLenght) {
+                    methods.changeSong(0);
+                } else {
+                    methods.changeSong(currentIndex + 1);
+                }
+            },
+            // 上一首
+            prevSong() {
+                if (data.mp3List.length <= 0) return false
+                const currentIndex = data.currentMusic.currentMusicIndex;
+                if (currentIndex === 0) {
+                    methods.changeSong(data.mp3List.length - 1);
+                } else {
+                    methods.changeSong(currentIndex - 1);
+                }
+            },
+            // 结束播放 切换下一首
+            endPlay() {
+                // console.log("结束播放")
+                methods.nextSong();
+            }
+        })
+
+
+        // 绑定副作用函数并初始执行
+        effect(() => {
+            /* console.log($1) */
+            readerApp("my-template", data, "#container");
+        });
+
+    </script>
+
+
+</body>
+
+</html>

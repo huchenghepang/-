@@ -1,0 +1,32 @@
+.volume-control-vertical {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    height: 150px;
+}
+
+.volume-slider {
+    writing-mode: bt-lr; /* 从下到上的布局 */
+    -webkit-appearance: none;
+    width: 5px;
+    height: 150px;
+    background-color: #ddd;
+    appearance: none;
+    border-radius: 5px;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background-color: #4CAF50;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.volume-icon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
